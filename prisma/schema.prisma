@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USER MODEL ─────────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  role          String    @default("VOLUNTEER") // SUPER_ADMIN, ORGANIZATION, VOLUNTEER, TEAM, COLLEGE
+  emailVerified Boolean   @default(false)
+  phoneVerified Boolean   @default(false)
+  phone         String?
+  profilePhoto  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  volunteerProfile    VolunteerProfile?
+  organizationProfile OrganizationProfile?
+  collegeProfile      CollegeProfile?
+  teamMemberships     TeamMember[]
+  ownedTeams          Team[]
+  sessions            Session[]
+  accounts            Account[]
+  organizedEvents     Event[]       @relation("OrganizedEvents")
+  applications        Application[] @relation("UserApplications")
+}
+
+// ─── NEXTAUTH MODELS ────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── VOLUNTEER PROFILE ──────────────────────────────────────
+model VolunteerProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  fullName    String
+  college     String?
+  course      String?
+  discipline  String?
+  yearOfStudy String?
+  skills      String  @default("[]")
+  interests   String  @default("[]")
+  availability String?
+  experience  String?
+  portfolio   String?
+  resumeUrl   String?
+  location    String?
+  city        String?
+  state       String?
+  bio         String?
+
+  reputationScore  Float   @default(0)
+  completionRate   Float   @default(100)
+  noShowCount      Int     @default(0)
+  totalEvents      Int     @default(0)
+  totalHours       Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── ORGANIZATION PROFILE ───────────────────────────────────
+model OrganizationProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  organizationName String
+  type             String
+  officialEmail    String
+  contactPerson    String
+  website          String?
+  linkedin         String?
+  location         String?
+  city             String?
+  state            String?
+  shortDescription String?
+  logoUrl          String?
+  verificationDocs String?
+  verificationStatus String @default("UNVERIFIED")
+
+  organizationRating  Float @default(0)
+  reliabilityScore    Float @default(100)
+  totalEventsHosted   Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── COLLEGE PROFILE ────────────────────────────────────────
+model CollegeProfile {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  collegeName     String
+  officialEmail   String
+  contactPerson   String
+  website         String?
+  location        String?
+  city            String?
+  state           String?
+  affiliatedUniversity String?
+  totalStudents   Int     @default(0)
+  logoUrl         String?
+  verificationStatus String @default("UNVERIFIED")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── EVENT MODEL ────────────────────────────────────────────
+model Event {
+  id            String   @id @default(cuid())
+  organizerId   String
+  title         String
+  description   String
+  shortDesc     String?
+  category      String   // HACKATHON, SUMMIT, CONFERENCE, WORKSHOP, CSR_DRIVE, TECH_FEST, WEBINAR, OTHER
+  eventType     String   @default("IN_PERSON") // IN_PERSON, VIRTUAL, HYBRID
+  status        String   @default("DRAFT") // DRAFT, PUBLISHED, ACTIVE, COMPLETED, CANCELLED, ARCHIVED
+
+  startDate     DateTime
+  endDate       DateTime
+  registrationDeadline DateTime?
+
+  venue         String?
+  address       String?
+  city          String?
+  state         String?
+  virtualLink   String?
+
+  requiredSkills  String  @default("[]") // JSON array
+  rolesNeeded     String  @default("[]") // JSON array of { role, count, description }
+  totalSlots      Int     @default(0)
+  filledSlots     Int     @default(0)
+
+  bannerImage   String?
+  contactEmail  String?
+  contactPhone  String?
+
+  perks         String?  // e.g. "Certificate, Swag, Networking"
+  eligibility   String?  // e.g. "Open to all" or "Engineering students only"
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizer     User          @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  applications  Application[]
+}
+
+// ─── APPLICATION MODEL ──────────────────────────────────────
+model Application {
+  id          String   @id @default(cuid())
+  eventId     String
+  applicantId String
+  teamId      String?  // null = individual application
+
+  status      String   @default("APPLIED") // APPLIED, SHORTLISTED, ACCEPTED, REJECTED, WITHDRAWN
+  role        String?  // Which event role they applied for
+  message     String?  // Cover message from applicant
+  orgNote     String?  // Internal note from organization
+
+  appliedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  applicant   User     @relation("UserApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  team        Team?    @relation(fields: [teamId], references: [id])
+
+  @@unique([eventId, applicantId])
+}
+
+// ─── TEAM MODEL ─────────────────────────────────────────────
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  leaderId    String
+  skills      String   @default("[]")
+  rating      Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leader       User          @relation(fields: [leaderId], references: [id])
+  members      TeamMember[]
+  applications Application[]
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+  role   String @default("MEMBER")
+
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
