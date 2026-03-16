@@ -14,17 +14,135 @@ import type { OrganizationRegisterInput } from "@/lib/validations";
 export function OrganizationRegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<OrganizationRegisterInput>();
+  const { register, handleSubmit, formState: { errors }, watch, setError, clearErrors } = useForm<OrganizationRegisterInput>();
   const password = watch("password");
+  const email = watch("officialEmail");
+
+  // Check if email exists
+  const checkEmailExists = async () => {
+    if (!email) return false;
+    
+    setCheckingEmail(true);
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      
+      const data = await res.json();
+      
+      if (data.exists) {
+        setError("officialEmail", { 
+          type: "manual", 
+          message: "Account already exists! Please login." 
+        });
+        toast.error(
+          <div>
+            Account already exists! 
+            <button 
+              onClick={() => router.push('/login')}
+              className="ml-2 underline font-bold"
+            >
+              Login here
+            </button>
+          </div>
+        );
+        return true;
+      } else {
+        clearErrors("officialEmail");
+        return false;
+      }
+    } catch {
+      return false;
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  // Send OTP
+  const sendOtp = async () => {
+    if (!email) {
+      toast.error("Enter email first");
+      return;
+    }
+
+    const exists = await checkEmailExists();
+    if (exists) return;
+
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          type: "organization-signup"
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send OTP");
+        return;
+      }
+
+      setOtpSent(true);
+      toast.success("OTP sent to your email");
+    } catch {
+      toast.error("Error sending OTP");
+    }
+  };
+
+  // Verify OTP
+  const verifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Enter valid 6-digit OTP");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp,
+          type: "organization-signup"
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        toast.error(data.message || "Invalid OTP");
+        return;
+      }
+
+      setOtpVerified(true);
+      toast.success("Email verified successfully!");
+    } catch {
+      toast.error("Verification failed");
+    }
+  };
 
   const onSubmit = async (data: OrganizationRegisterInput) => {
+    if (!otpVerified) {
+      toast.error("Please verify email first");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch("/api/register/organization", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, otp }),
       });
 
       const result = await res.json();
@@ -74,6 +192,7 @@ export function OrganizationRegisterForm() {
           />
         </div>
 
+        {/* Email with OTP */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Official Email *"
@@ -81,16 +200,51 @@ export function OrganizationRegisterForm() {
             type="email"
             placeholder="org@example.com"
             error={errors.officialEmail?.message}
-            {...register("officialEmail", { required: "Email is required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } })}
+            {...register("officialEmail", { 
+              required: "Email is required", 
+              pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } 
+            })}
+            onBlur={checkEmailExists}
           />
-          <Input
-            label="Contact Person *"
-            id="contactPerson"
-            placeholder="Contact name"
-            error={errors.contactPerson?.message}
-            {...register("contactPerson", { required: "Contact person is required" })}
-          />
+          
+          <div className="flex items-end gap-2">
+            <Button
+              type="button"
+              onClick={sendOtp}
+              disabled={otpVerified || checkingEmail}
+              className="flex-1"
+              size="sm"
+            >
+              {checkingEmail ? "Checking..." : (otpVerified ? "Verified ✓" : "Send OTP")}
+            </Button>
+          </div>
         </div>
+
+        {/* OTP Input */}
+        {otpSent && !otpVerified && (
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                label="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="6-digit code"
+                maxLength={6}
+              />
+            </div>
+            <Button type="button" onClick={verifyOtp} size="sm">
+              Verify
+            </Button>
+          </div>
+        )}
+
+        <Input
+          label="Contact Person *"
+          id="contactPerson"
+          placeholder="Contact name"
+          error={errors.contactPerson?.message}
+          {...register("contactPerson", { required: "Contact person is required" })}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
@@ -99,7 +253,10 @@ export function OrganizationRegisterForm() {
             type="password"
             placeholder="Min 6 characters"
             error={errors.password?.message}
-            {...register("password", { required: "Password is required", minLength: { value: 6, message: "Min 6 characters" } })}
+            {...register("password", { 
+              required: "Password is required", 
+              minLength: { value: 6, message: "Min 6 characters" } 
+            })}
           />
           <Input
             label="Confirm Password *"
@@ -153,8 +310,14 @@ export function OrganizationRegisterForm() {
           {...register("shortDescription", { maxLength: { value: 500, message: "Max 500 characters" } })}
         />
 
-        <Button type="submit" isLoading={isLoading} className="w-full" size="lg">
-          Register Organization
+        <Button 
+          type="submit" 
+          isLoading={isLoading} 
+          className="w-full" 
+          size="lg"
+          disabled={!otpVerified}
+        >
+          {otpVerified ? "Register Organization" : "Verify Email First"}
         </Button>
       </form>
     </div>

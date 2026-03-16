@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -15,11 +15,13 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.2",
+    "@types/nodemailer": "^7.0.11",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
+    "nodemailer": "^7.0.13",
     "prisma": "^6.19.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -242,3 +242,15 @@ model TeamMember {
 
   @@unique([teamId, userId])
 }
+
+
+// OTP verification table
+// OTP verification table
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  otpType   String   // "signup", "forgot-password", etc.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
