@@ -9,16 +9,16 @@ datasource db {
 
 // ─── USER MODEL ─────────────────────────────────────────────
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   password      String
-  role          String    @default("VOLUNTEER") // SUPER_ADMIN, ORGANIZATION, VOLUNTEER, TEAM, COLLEGE
-  emailVerified Boolean   @default(false)
-  phoneVerified Boolean   @default(false)
+  role          String   @default("VOLUNTEER") // SUPER_ADMIN, ORGANIZATION, VOLUNTEER, TEAM, COLLEGE
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
   phone         String?
   profilePhoto  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   volunteerProfile    VolunteerProfile?
   organizationProfile OrganizationProfile?
@@ -27,8 +27,10 @@ model User {
   ownedTeams          Team[]
   sessions            Session[]
   accounts            Account[]
-  organizedEvents     Event[]       @relation("OrganizedEvents")
-  applications        Application[] @relation("UserApplications")
+  organizedEvents     Event[]              @relation("OrganizedEvents")
+  applications        Application[]        @relation("UserApplications")
+  notifications       Notification[] // For user notifications
+  adminLogs           AdminLog[]
 }
 
 // ─── NEXTAUTH MODELS ────────────────────────────────────────
@@ -70,29 +72,29 @@ model VerificationToken {
 
 // ─── VOLUNTEER PROFILE ──────────────────────────────────────
 model VolunteerProfile {
-  id          String  @id @default(cuid())
-  userId      String  @unique
-  fullName    String
-  college     String?
-  course      String?
-  discipline  String?
-  yearOfStudy String?
-  skills      String  @default("[]")
-  interests   String  @default("[]")
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  fullName     String
+  college      String?
+  course       String?
+  discipline   String?
+  yearOfStudy  String?
+  skills       String  @default("[]")
+  interests    String  @default("[]")
   availability String?
-  experience  String?
-  portfolio   String?
-  resumeUrl   String?
-  location    String?
-  city        String?
-  state       String?
-  bio         String?
+  experience   String?
+  portfolio    String?
+  resumeUrl    String?
+  location     String?
+  city         String?
+  state        String?
+  bio          String?
 
-  reputationScore  Float   @default(0)
-  completionRate   Float   @default(100)
-  noShowCount      Int     @default(0)
-  totalEvents      Int     @default(0)
-  totalHours       Float   @default(0)
+  reputationScore Float @default(0)
+  completionRate  Float @default(100)
+  noShowCount     Int   @default(0)
+  totalEvents     Int   @default(0)
+  totalHours      Float @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -102,25 +104,25 @@ model VolunteerProfile {
 
 // ─── ORGANIZATION PROFILE ───────────────────────────────────
 model OrganizationProfile {
-  id               String  @id @default(cuid())
-  userId           String  @unique
-  organizationName String
-  type             String
-  officialEmail    String
-  contactPerson    String
-  website          String?
-  linkedin         String?
-  location         String?
-  city             String?
-  state            String?
-  shortDescription String?
-  logoUrl          String?
-  verificationDocs String?
-  verificationStatus String @default("UNVERIFIED")
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  organizationName   String
+  type               String
+  officialEmail      String
+  contactPerson      String
+  website            String?
+  linkedin           String?
+  location           String?
+  city               String?
+  state              String?
+  shortDescription   String?
+  logoUrl            String?
+  verificationDocs   String?
+  verificationStatus String  @default("UNVERIFIED")
 
-  organizationRating  Float @default(0)
-  reliabilityScore    Float @default(100)
-  totalEventsHosted   Int   @default(0)
+  organizationRating Float @default(0)
+  reliabilityScore   Float @default(100)
+  totalEventsHosted  Int   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -130,19 +132,19 @@ model OrganizationProfile {
 
 // ─── COLLEGE PROFILE ────────────────────────────────────────
 model CollegeProfile {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  collegeName     String
-  officialEmail   String
-  contactPerson   String
-  website         String?
-  location        String?
-  city            String?
-  state           String?
+  id                   String  @id @default(cuid())
+  userId               String  @unique
+  collegeName          String
+  officialEmail        String
+  contactPerson        String
+  website              String?
+  location             String?
+  city                 String?
+  state                String?
   affiliatedUniversity String?
-  totalStudents   Int     @default(0)
-  logoUrl         String?
-  verificationStatus String @default("UNVERIFIED")
+  totalStudents        Int     @default(0)
+  logoUrl              String?
+  verificationStatus   String  @default("UNVERIFIED")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,74 +154,74 @@ model CollegeProfile {
 
 // ─── EVENT MODEL ────────────────────────────────────────────
 model Event {
-  id            String   @id @default(cuid())
-  organizerId   String
-  title         String
-  description   String
-  shortDesc     String?
-  category      String   // HACKATHON, SUMMIT, CONFERENCE, WORKSHOP, CSR_DRIVE, TECH_FEST, WEBINAR, OTHER
-  eventType     String   @default("IN_PERSON") // IN_PERSON, VIRTUAL, HYBRID
-  status        String   @default("DRAFT") // DRAFT, PUBLISHED, ACTIVE, COMPLETED, CANCELLED, ARCHIVED
+  id          String  @id @default(cuid())
+  organizerId String
+  title       String
+  description String
+  shortDesc   String?
+  category    String // HACKATHON, SUMMIT, CONFERENCE, WORKSHOP, CSR_DRIVE, TECH_FEST, WEBINAR, OTHER
+  eventType   String  @default("IN_PERSON") // IN_PERSON, VIRTUAL, HYBRID
+  status      String  @default("DRAFT") // DRAFT, PUBLISHED, ACTIVE, COMPLETED, CANCELLED, ARCHIVED
 
-  startDate     DateTime
-  endDate       DateTime
+  startDate            DateTime
+  endDate              DateTime
   registrationDeadline DateTime?
 
-  venue         String?
-  address       String?
-  city          String?
-  state         String?
-  virtualLink   String?
+  venue       String?
+  address     String?
+  city        String?
+  state       String?
+  virtualLink String?
 
-  requiredSkills  String  @default("[]") // JSON array
-  rolesNeeded     String  @default("[]") // JSON array of { role, count, description }
-  totalSlots      Int     @default(0)
-  filledSlots     Int     @default(0)
+  requiredSkills String @default("[]") // JSON array
+  rolesNeeded    String @default("[]") // JSON array of { role, count, description }
+  totalSlots     Int    @default(0)
+  filledSlots    Int    @default(0)
 
-  bannerImage   String?
-  contactEmail  String?
-  contactPhone  String?
+  bannerImage  String?
+  contactEmail String?
+  contactPhone String?
 
-  perks         String?  // e.g. "Certificate, Swag, Networking"
-  eligibility   String?  // e.g. "Open to all" or "Engineering students only"
+  perks       String? // e.g. "Certificate, Swag, Networking"
+  eligibility String? // e.g. "Open to all" or "Engineering students only"
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  organizer     User          @relation("OrganizedEvents", fields: [organizerId], references: [id])
-  applications  Application[]
+  organizer    User          @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  applications Application[]
 }
 
 // ─── APPLICATION MODEL ──────────────────────────────────────
 model Application {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   eventId     String
   applicantId String
-  teamId      String?  // null = individual application
+  teamId      String? // null = individual application
 
-  status      String   @default("APPLIED") // APPLIED, SHORTLISTED, ACCEPTED, REJECTED, WITHDRAWN
-  role        String?  // Which event role they applied for
-  message     String?  // Cover message from applicant
-  orgNote     String?  // Internal note from organization
+  status  String  @default("APPLIED") // APPLIED, SHORTLISTED, ACCEPTED, REJECTED, WITHDRAWN
+  role    String? // Which event role they applied for
+  message String? // Cover message from applicant
+  orgNote String? // Internal note from organization
 
-  appliedAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  appliedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  applicant   User     @relation("UserApplications", fields: [applicantId], references: [id], onDelete: Cascade)
-  team        Team?    @relation(fields: [teamId], references: [id])
+  event     Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  applicant User  @relation("UserApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  team      Team? @relation(fields: [teamId], references: [id])
 
   @@unique([eventId, applicantId])
 }
 
 // ─── TEAM MODEL ─────────────────────────────────────────────
 model Team {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
   leaderId    String
-  skills      String   @default("[]")
-  rating      Float    @default(0)
+  skills      String  @default("[]")
+  rating      Float   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -243,14 +245,39 @@ model TeamMember {
   @@unique([teamId, userId])
 }
 
-
 // OTP verification table
 // OTP verification table
 model Otp {
   id        String   @id @default(uuid())
   email     String
   otp       String
-  otpType   String   // "signup", "forgot-password", etc.
+  otpType   String // "signup", "forgot-password", etc.
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// ─── NOTIFICATION MODEL ─────────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── ADMIN LOG MODEL (Optional but good to have) ───────────
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetId   String?
+  targetType String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }

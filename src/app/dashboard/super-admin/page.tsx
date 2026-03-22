@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
   Users, Building2, Calendar, Shield,
@@ -69,7 +69,7 @@ export default function SuperAdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex">
-        <DashboardSidebar role="SUPER_ADMIN" />
+        <AdminSidebar />
         <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Admin Control Panel</h1>
@@ -103,7 +103,7 @@ export default function SuperAdminDashboard() {
                     <span className="text-sm font-medium text-gray-700">Manage Organizations</span>
                   </button>
                   <button
-                    onClick={() => router.push("/dashboard/super-admin/verification")}
+                    onClick={() => router.push("/dashboard/super-admin/verifications")}
                     className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all w-full"
                   >
                     <Shield className="w-5 h-5 text-amber-600" />
@@ -117,7 +117,7 @@ export default function SuperAdminDashboard() {
                     <span className="text-sm font-medium text-gray-700">Manage Users</span>
                   </button>
                   <button
-                    onClick={() => router.push("/dashboard/super-admin/analytics")}
+                    onClick={() => router.push("/dashboard/super-admin/reports")}
                     className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all w-full"
                   >
                     <BarChart3 className="w-5 h-5 text-purple-600" />

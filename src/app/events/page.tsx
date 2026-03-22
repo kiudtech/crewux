@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { EVENT_CATEGORIES, EVENT_TYPES, INDIAN_STATES } from "@/lib/constants";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Calendar, Search, SlidersHorizontal, X } from "lucide-react";
 
 interface EventData {
   id: string;

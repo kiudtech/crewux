@@ -1,0 +1,531 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Building2,
+  Search,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Download,
+  AlertCircle,
+  Calendar,
+  Filter,
+  MoreVertical
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+// Card Component
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`p-4 ${className}`}>
+    {children}
+  </div>
+);
+
+// Badge Component
+const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "success" | "warning" | "danger" | "info" | "default" }) => {
+  const variants = {
+    success: "bg-green-100 text-green-700",
+    warning: "bg-yellow-100 text-yellow-700",
+    danger: "bg-red-100 text-red-700",
+    info: "bg-blue-100 text-blue-700",
+    default: "bg-gray-100 text-gray-700"
+  };
+  return (
+    <span className={`px-2 py-1 text-xs rounded-full ${variants[variant]}`}>
+      {children}
+    </span>
+  );
+};
+
+// Button Component
+const Button = ({ children, onClick, variant = "default", size = "md", className = "", disabled = false }: any) => {
+  const variants = {
+    default: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+    primary: "bg-indigo-600 text-white hover:bg-indigo-700",
+    danger: "bg-red-600 text-white hover:bg-red-700",
+    ghost: "hover:bg-gray-100"
+  };
+  
+  const sizes = {
+    sm: "px-2 py-1 text-xs",
+    md: "px-3 py-1.5 text-sm",
+    lg: "px-4 py-2 text-base"
+  };
+  
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+interface Organization {
+  id: string;
+  organizationName: string;
+  officialEmail: string;
+  contactPerson: string;
+  phone?: string;
+  type: string;
+  city?: string;
+  state?: string;
+  verificationStatus: "VERIFIED" | "PENDING" | "REJECTED" | "UNVERIFIED";
+  emailVerified: boolean;
+  createdAt: string;
+  totalEvents: number;
+  totalVolunteers: number;
+  logo?: string;
+}
+
+export default function AdminOrganizationsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedOrgs, setSelectedOrgs] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, [statusFilter, typeFilter]);
+
+  const fetchOrganizations = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (typeFilter !== "all") params.append("type", typeFilter);
+      
+      const res = await fetch(`/api/admin/organizations?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrganizations(data.organizations);
+      } else {
+        toast.error("Failed to fetch organizations");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOrganization = async (orgId: string) => {
+    try {
+      const res = await fetch(`/api/admin/organizations/${orgId}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve" })
+      });
+      if (res.ok) {
+        toast.success("Organization verified successfully");
+        fetchOrganizations();
+      } else {
+        toast.error("Failed to verify");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const rejectOrganization = async (orgId: string) => {
+    if (!confirm("Are you sure you want to reject this organization?")) return;
+    
+    try {
+      const res = await fetch(`/api/admin/organizations/${orgId}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject" })
+      });
+      if (res.ok) {
+        toast.success("Organization rejected");
+        fetchOrganizations();
+      } else {
+        toast.error("Failed to reject");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const bulkVerify = async () => {
+    if (selectedOrgs.length === 0) {
+      toast.error("No organizations selected");
+      return;
+    }
+    
+    if (!confirm(`Verify ${selectedOrgs.length} organizations?`)) return;
+    
+    try {
+      const res = await fetch("/api/admin/organizations/bulk-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedOrgs })
+      });
+      if (res.ok) {
+        toast.success(`${selectedOrgs.length} organizations verified`);
+        setSelectedOrgs([]);
+        fetchOrganizations();
+      }
+    } catch {
+      toast.error("Failed to verify");
+    }
+  };
+
+  const exportData = () => {
+    const csvData = organizations.map(org => ({
+      "Organization Name": org.organizationName,
+      "Email": org.officialEmail,
+      "Contact Person": org.contactPerson,
+      "Phone": org.phone || "",
+      "Type": org.type,
+      "Location": `${org.city || ""} ${org.state || ""}`.trim(),
+      "Status": org.verificationStatus,
+      "Events": org.totalEvents,
+      "Volunteers": org.totalVolunteers,
+      "Joined": new Date(org.createdAt).toLocaleDateString()
+    }));
+    
+    const headers = Object.keys(csvData[0] || {});
+    const csv = [
+      headers.join(","),
+      ...csvData.map(row => headers.map(h => JSON.stringify(row[h as keyof typeof row] || "")).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `organizations_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    toast.success("Export started");
+  };
+
+  const filteredOrgs = organizations.filter(org =>
+    org.organizationName.toLowerCase().includes(search.toLowerCase()) ||
+    org.officialEmail.toLowerCase().includes(search.toLowerCase()) ||
+    org.contactPerson.toLowerCase().includes(search.toLowerCase()) ||
+    org.city?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const stats = {
+    total: organizations.length,
+    verified: organizations.filter(o => o.verificationStatus === "VERIFIED").length,
+    pending: organizations.filter(o => o.verificationStatus === "PENDING").length,
+    rejected: organizations.filter(o => o.verificationStatus === "REJECTED").length,
+    unverified: organizations.filter(o => o.verificationStatus === "UNVERIFIED").length
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case "VERIFIED":
+        return <Badge variant="success">Verified</Badge>;
+      case "PENDING":
+        return <Badge variant="warning">Pending</Badge>;
+      case "REJECTED":
+        return <Badge variant="danger">Rejected</Badge>;
+      default:
+        return <Badge variant="default">Unverified</Badge>;
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrgs.length === filteredOrgs.length) {
+      setSelectedOrgs([]);
+    } else {
+      setSelectedOrgs(filteredOrgs.map(o => o.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    if (selectedOrgs.includes(id)) {
+      setSelectedOrgs(selectedOrgs.filter(s => s !== id));
+    } else {
+      setSelectedOrgs([...selectedOrgs, id]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage and verify organizations on the platform
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {selectedOrgs.length > 0 && (
+            <Button variant="primary" onClick={bulkVerify}>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Verify Selected ({selectedOrgs.length})
+            </Button>
+          )}
+          <Button variant="default" onClick={exportData}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-green-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Verified</p>
+            <p className="text-2xl font-bold text-green-600">{stats.verified}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-yellow-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Pending</p>
+            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-red-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Rejected</p>
+            <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Unverified</p>
+            <p className="text-2xl font-bold text-gray-500">{stats.unverified}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search by name, email, contact person..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All Status</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="PENDING">Pending</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="UNVERIFIED">Unverified</option>
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All Types</option>
+              <option value="NGO">NGO</option>
+              <option value="Events">Events Company</option>
+              <option value="Brand">Brand</option>
+              <option value="Agency">Agency</option>
+              <option value="Startup">Startup</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Organizations Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrgs.length === filteredOrgs.length && filteredOrgs.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded border-gray-300"
+                    />
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stats</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredOrgs.map((org) => (
+                  <tr key={org.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrgs.includes(org.id)}
+                        onChange={() => toggleSelect(org.id)}
+                        className="rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">
+                          {org.logo ? (
+                            <img src={org.logo} alt={org.organizationName} className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            org.organizationName.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{org.organizationName}</p>
+                          <p className="text-sm text-gray-500">{org.officialEmail}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{org.contactPerson}</p>
+                        {org.phone && (
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <Phone className="w-3 h-3" />
+                            <span>{org.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {org.city || org.state ? (
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <MapPin className="w-3 h-3" />
+                          <span>{[org.city, org.state].filter(Boolean).join(", ")}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="info">{org.type}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">
+                        <p>Events: {org.totalEvents || 0}</p>
+                        <p>Volunteers: {org.totalVolunteers || 0}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {getStatusBadge(org.verificationStatus)}
+                      {!org.emailVerified && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-yellow-600">
+                          <AlertCircle className="w-3 h-3" />
+                          Email pending
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {new Date(org.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <Link href={`/dashboard/admin/organizations/${org.id}`}>
+                          <Button variant="ghost" size="sm" className="p-1">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                        {org.verificationStatus === "PENDING" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => verifyOrganization(org.id)}
+                              className="p-1 text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => rejectOrganization(org.id)}
+                              className="p-1 text-red-600 hover:text-red-700"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredOrgs.length === 0 && (
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No organizations found</h3>
+              <p className="text-gray-500 mt-1">
+                {search ? "Try different search terms" : "No organizations registered yet"}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      {filteredOrgs.length > 0 && (
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">
+            Showing {filteredOrgs.length} of {organizations.length} organizations
+          </p>
+          <div className="flex gap-2">
+            <Button variant="default" size="sm" disabled>
+              Previous
+            </Button>
+            <Button variant="default" size="sm">
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
