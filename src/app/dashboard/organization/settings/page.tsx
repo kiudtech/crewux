@@ -8,7 +8,7 @@ import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/Card";
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Bell,
@@ -38,25 +38,6 @@ import {
   Trash2
 } from "lucide-react";
 import toast from "react-hot-toast";
-
-// Card Components
-const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>
-    {children}
-  </div>
-);
-
-const CardHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="p-4 border-b border-gray-200">
-    {children}
-  </div>
-);
-
-const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-4 ${className}`}>
-    {children}
-  </div>
-);
 
 // Switch Component
 const Switch = ({ checked, onCheckedChange, label }: { 
@@ -206,7 +187,6 @@ export default function OrganizationSettingsPage() {
             location: data.location || ""
           });
           
-          // Load saved settings from localStorage
           const saved = localStorage.getItem("orgSettings");
           if (saved) {
             try {
@@ -231,16 +211,12 @@ export default function OrganizationSettingsPage() {
 
   const saveSettings = () => {
     setSaving(true);
-    
-    // Save to localStorage
     localStorage.setItem("orgSettings", JSON.stringify({
       notifications,
       privacy,
       preferences,
       bankDetails
     }));
-
-    // Simulate API call
     setTimeout(() => {
       toast.success("Settings saved successfully!");
       setSaving(false);
@@ -272,7 +248,6 @@ export default function OrganizationSettingsPage() {
       toast.error("Passwords do not match");
       return;
     }
-
     toast.success("Password changed successfully!");
     setPasswordData({
       currentPassword: "",
@@ -306,7 +281,6 @@ export default function OrganizationSettingsPage() {
 
   const getVerificationBadge = () => {
     if (!profile) return null;
-    
     switch(profile.verificationStatus) {
       case "VERIFIED":
         return <Badge variant="success"><CheckCircle className="w-3 h-3 inline mr-1" /> Verified</Badge>;
@@ -333,7 +307,6 @@ export default function OrganizationSettingsPage() {
       <div className="flex">
         <DashboardSidebar role="ORGANIZATION" />
         <main className="flex-1 p-6 lg:p-8 max-w-5xl">
-          {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -343,8 +316,8 @@ export default function OrganizationSettingsPage() {
 
           {/* Profile Summary Card */}
           {profile && (
-            <Card className="mb-6">
-              <CardContent className="p-4">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
+              <div className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-2xl">
                     {profile.logo ? (
@@ -371,8 +344,8 @@ export default function OrganizationSettingsPage() {
                     Change Logo
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Tabs Navigation */}
@@ -388,14 +361,14 @@ export default function OrganizationSettingsPage() {
 
             {/* Profile Tab */}
             <TabsContent value="profile">
-              <Card>
-                <CardHeader>
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-4 border-b border-gray-200">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Building2 className="w-5 h-5" />
                     Organization Information
                   </h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                </div>
+                <div className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                       label="Organization Name *"
@@ -508,537 +481,126 @@ export default function OrganizationSettingsPage() {
                       Save Changes
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Notifications Tab */}
             <TabsContent value="notifications">
-              <Card>
-                <CardHeader>
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-4 border-b border-gray-200">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Bell className="w-5 h-5" />
                     Notification Settings
                   </h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                </div>
+                <div className="p-4 space-y-4">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Email Alerts</p>
-                      <p className="text-sm text-gray-500">Receive email notifications for important updates</p>
-                    </div>
-                    <Switch
-                      checked={notifications.emailAlerts}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, emailAlerts: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Email Alerts</p><p className="text-sm text-gray-500">Receive email notifications for important updates</p></div>
+                    <Switch checked={notifications.emailAlerts} onCheckedChange={(checked) => setNotifications({...notifications, emailAlerts: checked})} />
                   </div>
-
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Application Updates</p>
-                      <p className="text-sm text-gray-500">Get notified when volunteers apply to your events</p>
-                    </div>
-                    <Switch
-                      checked={notifications.applicationUpdates}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, applicationUpdates: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Application Updates</p><p className="text-sm text-gray-500">Get notified when volunteers apply to your events</p></div>
+                    <Switch checked={notifications.applicationUpdates} onCheckedChange={(checked) => setNotifications({...notifications, applicationUpdates: checked})} />
                   </div>
-
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Event Reminders</p>
-                      <p className="text-sm text-gray-500">Reminders for upcoming events and deadlines</p>
-                    </div>
-                    <Switch
-                      checked={notifications.eventReminders}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, eventReminders: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Event Reminders</p><p className="text-sm text-gray-500">Reminders for upcoming events and deadlines</p></div>
+                    <Switch checked={notifications.eventReminders} onCheckedChange={(checked) => setNotifications({...notifications, eventReminders: checked})} />
                   </div>
-
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Volunteer Messages</p>
-                      <p className="text-sm text-gray-500">Get notified when volunteers message you</p>
-                    </div>
-                    <Switch
-                      checked={notifications.volunteerMessages}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, volunteerMessages: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Volunteer Messages</p><p className="text-sm text-gray-500">Get notified when volunteers message you</p></div>
+                    <Switch checked={notifications.volunteerMessages} onCheckedChange={(checked) => setNotifications({...notifications, volunteerMessages: checked})} />
                   </div>
-
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Weekly Reports</p>
-                      <p className="text-sm text-gray-500">Receive weekly summary reports via email</p>
-                    </div>
-                    <Switch
-                      checked={notifications.weeklyReports}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, weeklyReports: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Weekly Reports</p><p className="text-sm text-gray-500">Receive weekly summary reports via email</p></div>
+                    <Switch checked={notifications.weeklyReports} onCheckedChange={(checked) => setNotifications({...notifications, weeklyReports: checked})} />
                   </div>
-
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Security Alerts</p>
-                      <p className="text-sm text-gray-500">Important security notifications</p>
-                    </div>
-                    <Switch
-                      checked={notifications.securityAlerts}
-                      onCheckedChange={(checked) => 
-                        setNotifications({...notifications, securityAlerts: checked})
-                      }
-                    />
+                    <div><p className="font-medium">Security Alerts</p><p className="text-sm text-gray-500">Important security notifications</p></div>
+                    <Switch checked={notifications.securityAlerts} onCheckedChange={(checked) => setNotifications({...notifications, securityAlerts: checked})} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Security Tab */}
             <TabsContent value="security">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Key className="w-5 h-5" />
-                      Change Password
-                    </h3>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="font-semibold flex items-center gap-2"><Key className="w-5 h-5" /> Change Password</h3>
+                  </div>
+                  <div className="p-4 space-y-4">
                     <div className="relative">
-                      <Input
-                        label="Current Password"
-                        type={showPassword ? "text" : "password"}
-                        value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-9 text-gray-500"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                      <Input label="Current Password" type={showPassword ? "text" : "password"} value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} />
+                      <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-gray-500">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                     </div>
-
                     <div className="relative">
-                      <Input
-                        label="New Password"
-                        type={showNewPassword ? "text" : "password"}
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-9 text-gray-500"
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                      <Input label="New Password" type={showNewPassword ? "text" : "password"} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} />
+                      <button onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-9 text-gray-500">{showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                     </div>
-
-                    <Input
-                      label="Confirm New Password"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                    />
-
-                    <div className="flex justify-end">
-                      <Button onClick={changePassword}>
-                        Update Password
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Smartphone className="w-5 h-5" />
-                      Two-Factor Authentication
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Add an extra layer of security to your account with 2FA
-                    </p>
-                    <Button variant="outline">Enable 2FA</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
-                      Email Verification
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">
-                          Your email {profile?.officialEmail} is verified
-                        </p>
-                      </div>
-                      <Badge variant="success">Verified</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Phone className="w-5 h-5" />
-                      Phone Verification
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">
-                          {profile?.phone ? `Your phone ${profile.phone} is not verified` : "No phone number added"}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">Verify Now</Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <Input label="Confirm New Password" type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})} />
+                    <div className="flex justify-end"><Button onClick={changePassword}>Update Password</Button></div>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 
             {/* Preferences Tab */}
             <TabsContent value="preferences">
-              <Card>
-                <CardHeader>
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Palette className="w-5 h-5" />
-                    Preferences
-                  </h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold flex items-center gap-2"><Palette className="w-5 h-5" /> Preferences</h3>
+                </div>
+                <div className="p-4 space-y-4">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                      <div>
-                        <p className="font-medium">Dark Mode</p>
-                        <p className="text-sm text-gray-500">Toggle between light and dark theme</p>
-                      </div>
-                    </div>
+                    <div className="flex items-center gap-3">{darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}<div><p className="font-medium">Dark Mode</p><p className="text-sm text-gray-500">Toggle between light and dark theme</p></div></div>
                     <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Language
-                    </label>
-                    <Select
-                      value={preferences.language}
-                      onChange={(e) => setPreferences({...preferences, language: e.target.value})}
-                      options={[
-                        { value: "english", label: "English" },
-                        { value: "hindi", label: "Hindi" },
-                        { value: "gujarati", label: "Gujarati" },
-                        { value: "marathi", label: "Marathi" },
-                        { value: "tamil", label: "Tamil" },
-                        { value: "telugu", label: "Telugu" },
-                        { value: "bengali", label: "Bengali" }
-                      ]}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Timezone
-                    </label>
-                    <Select
-                      value={preferences.timezone}
-                      onChange={(e) => setPreferences({...preferences, timezone: e.target.value})}
-                      options={[
-                        { value: "Asia/Kolkata", label: "India (IST)" },
-                        { value: "Asia/Dubai", label: "Dubai (GST)" },
-                        { value: "Asia/Singapore", label: "Singapore (SGT)" },
-                        { value: "America/New_York", label: "New York (EST)" },
-                        { value: "Europe/London", label: "London (GMT)" },
-                        { value: "Australia/Sydney", label: "Sydney (AEST)" }
-                      ]}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Date Format
-                      </label>
-                      <Select
-                        value={preferences.dateFormat}
-                        onChange={(e) => setPreferences({...preferences, dateFormat: e.target.value})}
-                        options={[
-                          { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
-                          { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
-                          { value: "YYYY-MM-DD", label: "YYYY-MM-DD" }
-                        ]}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Time Format
-                      </label>
-                      <Select
-                        value={preferences.timeFormat}
-                        onChange={(e) => setPreferences({...preferences, timeFormat: e.target.value})}
-                        options={[
-                          { value: "12h", label: "12-hour (12:00 PM)" },
-                          { value: "24h", label: "24-hour (14:30)" }
-                        ]}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Currency
-                    </label>
-                    <Select
-                      value={preferences.currency}
-                      onChange={(e) => setPreferences({...preferences, currency: e.target.value})}
-                      options={[
-                        { value: "INR", label: "Indian Rupee (₹)" },
-                        { value: "USD", label: "US Dollar ($)" },
-                        { value: "EUR", label: "Euro (€)" },
-                        { value: "GBP", label: "British Pound (£)" },
-                        { value: "AED", label: "Dirham (د.إ)" }
-                      ]}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                  <Select label="Language" value={preferences.language} onChange={(e) => setPreferences({...preferences, language: e.target.value})} options={[{ value: "english", label: "English" }, { value: "hindi", label: "Hindi" }]} />
+                  <Select label="Timezone" value={preferences.timezone} onChange={(e) => setPreferences({...preferences, timezone: e.target.value})} options={[{ value: "Asia/Kolkata", label: "India (IST)" }]} />
+                </div>
+              </div>
             </TabsContent>
 
             {/* Payments Tab */}
             <TabsContent value="payments">
-              <Card>
-                <CardHeader>
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Bank Account Details
-                  </h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold flex items-center gap-2"><CreditCard className="w-5 h-5" /> Bank Account Details</h3>
+                </div>
+                <div className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Account Holder Name *"
-                      value={bankDetails.accountHolder}
-                      onChange={(e) => setBankDetails({...bankDetails, accountHolder: e.target.value})}
-                    />
-                    <Input
-                      label="Bank Name *"
-                      value={bankDetails.bankName}
-                      onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
-                    />
-                    <Input
-                      label="Account Number *"
-                      type="password"
-                      value={bankDetails.accountNumber}
-                      onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
-                    />
-                    <Input
-                      label="Confirm Account Number *"
-                      type="password"
-                      value={bankDetails.confirmAccountNumber}
-                      onChange={(e) => setBankDetails({...bankDetails, confirmAccountNumber: e.target.value})}
-                    />
-                    <Input
-                      label="IFSC Code *"
-                      value={bankDetails.ifscCode}
-                      onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value})}
-                      placeholder="SBIN0001234"
-                    />
-                    <Input
-                      label="UPI ID"
-                      value={bankDetails.upiId}
-                      onChange={(e) => setBankDetails({...bankDetails, upiId: e.target.value})}
-                      placeholder="organization@okhdfcbank"
-                    />
+                    <Input label="Account Holder Name *" value={bankDetails.accountHolder} onChange={(e) => setBankDetails({...bankDetails, accountHolder: e.target.value})} />
+                    <Input label="Bank Name *" value={bankDetails.bankName} onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})} />
+                    <Input label="Account Number *" type="password" value={bankDetails.accountNumber} onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})} />
+                    <Input label="Confirm Account Number *" type="password" value={bankDetails.confirmAccountNumber} onChange={(e) => setBankDetails({...bankDetails, confirmAccountNumber: e.target.value})} />
+                    <Input label="IFSC Code *" value={bankDetails.ifscCode} onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value})} placeholder="SBIN0001234" />
+                    <Input label="UPI ID" value={bankDetails.upiId} onChange={(e) => setBankDetails({...bankDetails, upiId: e.target.value})} placeholder="organization@okhdfcbank" />
                   </div>
-
-                  <div className="flex justify-end">
-                    <Button variant="outline" onClick={verifyBankDetails}>
-                      Verify Bank Details
-                    </Button>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <h4 className="font-medium mb-3">Payout Settings</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="text-sm font-medium">Auto Payout</p>
-                          <p className="text-xs text-gray-500">Automatically process payments every week</p>
-                        </div>
-                        <Switch checked={false} onCheckedChange={() => {}} />
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="text-sm font-medium">Minimum Payout</p>
-                          <p className="text-xs text-gray-500">Minimum amount for auto payout</p>
-                        </div>
-                        <Select
-                          value="1000"
-                          onChange={() => {}}
-                          options={[
-                            { value: "500", label: "₹500" },
-                            { value: "1000", label: "₹1000" },
-                            { value: "2000", label: "₹2000" },
-                            { value: "5000", label: "₹5000" }
-                          ]}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <h4 className="font-medium mb-3">Recent Transactions</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="text-sm font-medium">March 15, 2026</p>
-                          <p className="text-xs text-gray-500">Event: Tech Workshop</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-green-600">+₹12,500</p>
-                          <p className="text-xs text-gray-500">Completed</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="text-sm font-medium">March 10, 2026</p>
-                          <p className="text-xs text-gray-500">Event: CSR Drive</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-green-600">+₹8,200</p>
-                          <p className="text-xs text-gray-500">Completed</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <div className="flex justify-end"><Button variant="outline" onClick={verifyBankDetails}>Verify Bank Details</Button></div>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Advanced Tab */}
             <TabsContent value="advanced">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Globe className="w-5 h-5" />
-                      API Access
-                    </h3>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium mb-2">API Key</p>
-                      <div className="flex gap-2">
-                        <code className="flex-1 p-2 bg-white border rounded text-sm font-mono">
-                          sk_live_xxxxxxxxxxxxxx
-                        </code>
-                        <Button variant="outline" size="sm">Regenerate</Button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Use this key to integrate with external applications
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium mb-2">Webhook URL</p>
-                      <Input
-                        placeholder="https://your-organization.com/webhook"
-                        value="https://api.gigbharat.com/webhook/org_123"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Receive real-time updates about applications and events
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Download className="w-5 h-5" />
-                      Data Management
-                    </h3>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Export All Data</p>
-                        <p className="text-sm text-gray-500">Download all your organization data</p>
-                      </div>
-                      <Button variant="outline" onClick={exportData}>
-                        Export JSON
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Export Events</p>
-                        <p className="text-sm text-gray-500">Download events data as CSV</p>
-                      </div>
-                      <Button variant="outline">Export CSV</Button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Export Volunteers</p>
-                        <p className="text-sm text-gray-500">Download volunteers list</p>
-                      </div>
-                      <Button variant="outline">Export CSV</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-red-200">
-                  <CardHeader>
-                    <h3 className="font-semibold flex items-center gap-2 text-red-600">
-                      <AlertTriangle className="w-5 h-5" />
-                      Danger Zone
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Permanently delete your organization account and all associated data. 
-                      This action cannot be undone.
-                    </p>
-                    <Button variant="danger" onClick={deleteAccount}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Account
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-4 border-b border-gray-200"><h3 className="font-semibold flex items-center gap-2"><Globe className="w-5 h-5" /> API Access</h3></div>
+                  <div className="p-4"><Button variant="outline">Regenerate API Key</Button></div>
+                </div>
+                <div className="border border-red-200 rounded-xl bg-white shadow-sm">
+                  <div className="p-4 border-b border-red-200"><h3 className="font-semibold flex items-center gap-2 text-red-600"><AlertTriangle className="w-5 h-5" /> Danger Zone</h3></div>
+                  <div className="p-4"><Button variant="danger" onClick={deleteAccount}><Trash2 className="w-4 h-4 mr-2" /> Delete Account</Button></div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
 
-          {/* Save Button */}
           <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => router.back()}>
-              Cancel
-            </Button>
-            <Button onClick={saveSettings} isLoading={saving} size="lg">
-              <Save className="w-4 h-4 mr-2" />
-              Save Settings
-            </Button>
+            <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+            <Button onClick={saveSettings} isLoading={saving} size="lg"><Save className="w-4 h-4 mr-2" /> Save Settings</Button>
           </div>
         </main>
       </div>
