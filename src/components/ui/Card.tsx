@@ -33,3 +33,8 @@ export function CardContent({ children, className }: { children: React.ReactNode
 export function CardFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl", className)}>{children}</div>;
 }
+
+// ✅ Add this
+export function CardTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <h3 className={cn("text-lg font-semibold text-gray-900", className)}>{children}</h3>;
+}
