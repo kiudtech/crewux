@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";  // ✅ ADD THIS
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { Menu, X, ChevronDown, User, LogOut, LayoutDashboard } from "lucide-react";
@@ -11,6 +12,14 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const pathname = usePathname();  // ✅ GET CURRENT PATH
+
+  // ✅ HIDE NAVBAR ON SUPER-ADMIN PAGES
+  const isSuperAdminPage = pathname?.startsWith("/dashboard/super-admin");
+  
+  if (isSuperAdminPage) {
+    return null;  // ✅ NO NAVBAR ON ADMIN PAGES
+  }
 
   const getDashboardLink = () => {
     if (!session?.user?.role) return "/dashboard";
@@ -26,10 +35,10 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">GB</span>
+                <span className="text-white font-bold text-sm">CW</span>
               </div>
               <span className="text-xl font-bold text-gray-900">
-                Gig<span className="text-indigo-600"> Bharat</span>
+                <span className="text-indigo-600"> Crewux</span>
               </span>
             </Link>
           </div>

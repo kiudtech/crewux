@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gig Bharat — Connecting Talent with Opportunity",
+  title: "Crewux — Connecting Talent with Opportunity",
   description: "India's premier event & volunteer workforce network. Connect with organizations, hackathons, conferences, CSR drives, and structured volunteering opportunities across India.",
 };
 

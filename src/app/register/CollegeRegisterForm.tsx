@@ -168,7 +168,7 @@ export function CollegeRegisterForm() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900">College Registration</h2>
-          <p className="text-sm text-gray-500">Register your institution on Gig Bharat</p>
+          <p className="text-sm text-gray-500">Register your institution on Crewux</p>
         </div>
       </div>
 

@@ -9,10 +9,10 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">GB</span>
+                <span className="text-white font-bold text-sm">CW</span>
               </div>
               <span className="text-xl font-bold text-white">
-                Gig<span className="text-indigo-400"> Bharat</span>
+                <span className="text-indigo-400"> Crewux</span>
               </span>
             </div>
             <p className="text-sm max-w-md">
@@ -43,7 +43,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs">&copy; {new Date().getFullYear()} Gig Bharat. All rights reserved.</p>
+          <p className="text-xs">&copy; {new Date().getFullYear()} Crewux. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/privacy" className="text-xs hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="text-xs hover:text-white transition-colors">Terms of Service</Link>

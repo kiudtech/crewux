@@ -169,7 +169,7 @@ export function OrganizationRegisterForm() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Organization Registration</h2>
-          <p className="text-sm text-gray-500">Register your organization on Gig Bharat</p>
+          <p className="text-sm text-gray-500">Register your organization on Crewux</p>
         </div>
       </div>
 

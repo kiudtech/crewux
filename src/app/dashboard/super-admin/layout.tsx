@@ -3,10 +3,9 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Navbar } from "@/components/layout/Navbar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 
-export default function AdminLayout({
+export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -23,7 +22,6 @@ export default function AdminLayout({
       return;
     }
 
-    // Check if user is admin
     if (session.user.role !== "SUPER_ADMIN") {
       router.push("/dashboard");
       return;
@@ -34,18 +32,17 @@ export default function AdminLayout({
 
   if (loading || status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-purple-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950">
       <div className="flex">
         <AdminSidebar />
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 p-6 lg:p-8 overflow-auto">
           {children}
         </main>
       </div>
