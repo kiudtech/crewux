@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession, signIn } from "next-auth/react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Navbar } from "@/components/layout/Navbar";
@@ -19,28 +19,23 @@ import {
   Shield,
   Star,
   Zap,
-  CheckCircle,
   AlertCircle,
   Github,
-  Twitter,
   Linkedin
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-// Animation Variants
-const fadeInUp = {
+// ✅ FIX: Properly typed animation variants
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-const scaleOnHover = {
-  scale: 1.02,
-  transition: { duration: 0.2 }
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.5, 
+      ease: [0.21, 0.45, 0.27, 0.9]  // ✅ Use array instead of string
+    } 
+  }
 };
 
 export default function LoginPage() {
@@ -102,12 +97,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-  const socialLogins = [
-    { name: "Google", icon: null, color: "hover:bg-red-50 hover:border-red-200", textColor: "text-red-600" },
-    { name: "GitHub", icon: <Github className="w-5 h-5" />, color: "hover:bg-gray-50 hover:border-gray-300", textColor: "text-gray-700" },
-    { name: "LinkedIn", icon: <Linkedin className="w-5 h-5" />, color: "hover:bg-blue-50 hover:border-blue-200", textColor: "text-blue-600" }
-  ];
 
   if (status === "loading") {
     return (
@@ -251,16 +240,14 @@ export default function LoginPage() {
               )}
 
               {/* Submit Button */}
-              <motion.div whileHover={scaleOnHover} whileTap={{ scale: 0.98 }}>
-                <Button
-                  type="submit"
-                  isLoading={loading}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 text-lg font-semibold"
-                >
-                  {loading ? "Signing in..." : "Sign In"}
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </motion.div>
+              <Button
+                type="submit"
+                isLoading={loading}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 text-lg font-semibold"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
             </form>
 
             {/* Divider */}
@@ -274,18 +261,15 @@ export default function LoginPage() {
             </div>
 
             {/* Social Logins */}
-            <div className="grid grid-cols-3 gap-3">
-              {socialLogins.map((social) => (
-                <motion.button
-                  key={social.name}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/20 rounded-lg ${social.color} transition-all duration-300`}
-                >
-                  {social.icon ? social.icon : <span className="text-lg">G</span>}
-                  <span className={`text-sm font-medium ${social.textColor}`}>{social.name}</span>
-                </motion.button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-300">
+                <span className="text-lg">G</span>
+                <span className="text-sm font-medium text-gray-300">Google</span>
+              </button>
+              <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-300">
+                <Github className="w-5 h-5 text-gray-400" />
+                <span className="text-sm font-medium text-gray-300">GitHub</span>
+              </button>
             </div>
 
             {/* Register Link */}

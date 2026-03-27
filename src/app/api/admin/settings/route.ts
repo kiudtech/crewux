@@ -18,7 +18,7 @@ export async function GET() {
         id: true,
         email: true,
         role: true,
-        name: true,
+        // ❌ Remove name - not in schema
         profilePhoto: true,
         createdAt: true
       }
@@ -28,12 +28,10 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get admin settings from database (if you have a settings table)
-    // For now, return basic admin info
     const settings = {
       profile: {
         id: admin.id,
-        name: admin.name || "Super Admin",
+        name: admin.email?.split("@")[0] || "Admin", // Use email as fallback
         email: admin.email,
         role: admin.role,
         profilePhoto: admin.profilePhoto,
@@ -84,18 +82,18 @@ export async function PUT(req: Request) {
 
     const { name, email, profilePhoto } = await req.json();
 
+    // ✅ Update only fields that exist
     const updatedAdmin = await db.user.update({
       where: { id: session.user.id },
       data: {
-        name: name || undefined,
         email: email || undefined,
         profilePhoto: profilePhoto || undefined
+        // ❌ name not in schema
       },
       select: {
         id: true,
         email: true,
         role: true,
-        name: true,
         profilePhoto: true
       }
     });
@@ -103,7 +101,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      profile: updatedAdmin
+      profile: {
+        ...updatedAdmin,
+        name: updatedAdmin.email?.split("@")[0] || "Admin"
+      }
     });
 
   } catch (error) {
@@ -148,7 +149,6 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Verify current password
     const isValid = await compare(currentPassword, admin.password);
     if (!isValid) {
       return NextResponse.json(
@@ -157,10 +157,8 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Hash new password
     const hashedPassword = await hash(newPassword, 12);
 
-    // Update password
     await db.user.update({
       where: { id: session.user.id },
       data: { password: hashedPassword }
@@ -198,10 +196,6 @@ export async function POST(req: Request) {
     }
 
     const { preferences, notifications, darkMode } = await req.json();
-
-    // If you have a settings table, save there
-    // For now, just return success
-    // You can store in database if you add a Settings model
 
     return NextResponse.json({
       success: true,
@@ -244,7 +238,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Delete admin account
     await db.user.delete({
       where: { id: session.user.id }
     });

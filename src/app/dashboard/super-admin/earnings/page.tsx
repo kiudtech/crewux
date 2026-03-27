@@ -12,7 +12,8 @@ import {
   Award,
   Download,
   Search,
-  Calendar
+  Calendar,
+  Loader2
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -25,7 +26,7 @@ const CardContent = ({ children, className = "" }: { children: React.ReactNode; 
   <div className={`p-4 ${className}`}>{children}</div>
 );
 
-const Badge = ({ children, variant = "default" }: any) => {
+const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "success" | "warning" | "danger" | "info" | "default" }) => {
   const variants: Record<string, string> = {
     success: "bg-green-100 text-green-700",
     warning: "bg-yellow-100 text-yellow-700",
@@ -36,15 +37,37 @@ const Badge = ({ children, variant = "default" }: any) => {
   return <span className={`px-2 py-1 text-xs rounded-full ${variants[variant]}`}>{children}</span>;
 };
 
-const Button = ({ children, onClick, variant = "default", size = "md", className = "" }: any) => {
-  const variants = {
+// ✅ FIX: Add proper typing for variant
+type ButtonVariant = "default" | "primary" | "ghost";
+
+const Button = ({ 
+  children, 
+  onClick, 
+  variant = "default" as ButtonVariant, 
+  size = "md", 
+  className = "", 
+  isLoading = false 
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void; 
+  variant?: ButtonVariant; 
+  size?: "sm" | "md" | "lg"; 
+  className?: string; 
+  isLoading?: boolean;
+}) => {
+  const variants: Record<ButtonVariant, string> = {
     default: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
     primary: "bg-indigo-600 text-white hover:bg-indigo-700",
     ghost: "hover:bg-gray-100"
   };
-  const sizes = { sm: "px-2 py-1 text-xs", md: "px-3 py-1.5 text-sm" };
+  const sizes = { sm: "px-2 py-1 text-xs", md: "px-3 py-1.5 text-sm", lg: "px-4 py-2 text-base" };
   return (
-    <button onClick={onClick} className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`}>
+    <button
+      onClick={onClick}
+      disabled={isLoading}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className} ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      {isLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
       {children}
     </button>
   );
@@ -126,14 +149,14 @@ export default function SuperAdminEarningsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-purple-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950">
       <Navbar />
       <div className="flex">
         <AdminSidebar />
@@ -142,12 +165,12 @@ export default function SuperAdminEarningsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Earnings</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-white">Earnings</h1>
+                <p className="text-sm text-gray-400 mt-1">
                   Track volunteer earnings and platform payouts
                 </p>
               </div>
-              <Button variant="outline" onClick={exportData}>
+              <Button onClick={exportData}>
                 <Download className="w-4 h-4 mr-2" />
                 Export Report
               </Button>
@@ -227,7 +250,7 @@ export default function SuperAdminEarningsPage() {
                       placeholder="Search volunteers..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 border rounded-lg"
+                      className="w-full pl-9 pr-4 py-2 border rounded-lg bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 </div>

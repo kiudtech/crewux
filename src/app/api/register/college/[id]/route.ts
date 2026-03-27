@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-// import { getServerSession } from "next-auth/next";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 // GET /api/college/students/[id] - Get single student details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -18,9 +16,8 @@ export async function GET(
       );
     }
 
-    const studentId = params.id;
+    const { id: studentId } = await params;
 
-    // Get college profile of logged in user
     const collegeUser = await db.user.findUnique({
       where: { email: session.user.email },
       include: { collegeProfile: true }
@@ -33,18 +30,13 @@ export async function GET(
       );
     }
 
-    // Fetch student details
     const student = await db.user.findUnique({
       where: { 
         id: studentId,
-        role: "VOLUNTEER" // Only fetch volunteers
+        role: "VOLUNTEER"
       },
       include: {
-        volunteerProfile: {
-          include: {
-            // Add any relations here
-          }
-        }
+        volunteerProfile: true
       }
     });
 
@@ -55,7 +47,6 @@ export async function GET(
       );
     }
 
-    // Verify that this student belongs to the same college
     if (student.volunteerProfile?.college !== collegeUser.collegeProfile.collegeName) {
       return NextResponse.json(
         { error: "Unauthorized - This student does not belong to your college" },
@@ -63,7 +54,6 @@ export async function GET(
       );
     }
 
-    // Fetch work history (applications/events)
     const workHistory = await db.application.findMany({
       where: {
         applicantId: studentId,
@@ -85,21 +75,19 @@ export async function GET(
       }
     });
 
-    // Format work history
     const formattedWorkHistory = workHistory.map(app => ({
       id: app.id,
       eventName: app.event.title,
       organizationName: app.event.organizer.organizationProfile?.organizationName || "Unknown",
       date: app.event.startDate,
       role: app.role || "Volunteer",
-      hours: 0, // This would come from attendance tracking
-      earnings: 0, // This would come from payment tracking
+      hours: 0,
+      earnings: 0,
       status: app.status.toLowerCase(),
-      rating: 4.5, // Example - would come from reviews
+      rating: 4.5,
       feedback: app.message || null
     }));
 
-    // Parse skills and interests from JSON strings
     const skills = student.volunteerProfile?.skills 
       ? JSON.parse(student.volunteerProfile.skills) 
       : [];
@@ -108,7 +96,6 @@ export async function GET(
       ? JSON.parse(student.volunteerProfile.interests) 
       : [];
 
-    // Format student data
     const formattedStudent = {
       id: student.id,
       fullName: student.volunteerProfile?.fullName || "",
@@ -125,20 +112,14 @@ export async function GET(
       emailVerified: student.emailVerified,
       phoneVerified: student.phoneVerified || false,
       createdAt: student.createdAt.toISOString(),
-      
-      // Stats
       reputationScore: student.volunteerProfile?.reputationScore || 0,
       completionRate: student.volunteerProfile?.completionRate || 0,
       noShowCount: student.volunteerProfile?.noShowCount || 0,
       totalEvents: student.volunteerProfile?.totalEvents || 0,
       totalHours: student.volunteerProfile?.totalHours || 0,
-      totalEarnings: 0, // This would come from payment tracking
-      
-      // Skills & Interests
+      totalEarnings: 0,
       skills: skills,
       interests: interests,
-      
-      // Work History
       workHistory: formattedWorkHistory
     };
 
@@ -156,7 +137,7 @@ export async function GET(
 // PUT /api/college/students/[id] - Update student details
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -167,7 +148,7 @@ export async function PUT(
       );
     }
 
-    const studentId = params.id;
+    const { id: studentId } = await params;
     const body = await req.json();
     const {
       fullName,
@@ -180,7 +161,6 @@ export async function PUT(
       bio
     } = body;
 
-    // Check college access
     const collegeUser = await db.user.findUnique({
       where: { email: session.user.email },
       include: { collegeProfile: true }
@@ -193,7 +173,6 @@ export async function PUT(
       );
     }
 
-    // Find student
     const student = await db.user.findUnique({
       where: { id: studentId },
       include: { volunteerProfile: true }
@@ -206,7 +185,6 @@ export async function PUT(
       );
     }
 
-    // Verify college match
     if (student.volunteerProfile?.college !== collegeUser.collegeProfile.collegeName) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -214,12 +192,19 @@ export async function PUT(
       );
     }
 
-    // Update volunteer profile
+    // ✅ Update phone in User table
+    if (phone !== undefined) {
+      await db.user.update({
+        where: { id: studentId },
+        data: { phone: phone || null }
+      });
+    }
+
+    // ✅ Update other fields in VolunteerProfile
     const updatedProfile = await db.volunteerProfile.update({
       where: { userId: studentId },
       data: {
         fullName: fullName || undefined,
-        phone: phone || undefined,
         course: course || undefined,
         discipline: discipline || undefined,
         yearOfStudy: yearOfStudy || undefined,
@@ -246,7 +231,7 @@ export async function PUT(
 // DELETE /api/college/students/[id] - Remove student
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -257,9 +242,8 @@ export async function DELETE(
       );
     }
 
-    const studentId = params.id;
+    const { id: studentId } = await params;
 
-    // Check college access
     const collegeUser = await db.user.findUnique({
       where: { email: session.user.email },
       include: { collegeProfile: true }
@@ -272,7 +256,6 @@ export async function DELETE(
       );
     }
 
-    // Find student
     const student = await db.user.findUnique({
       where: { id: studentId },
       include: { volunteerProfile: true }
@@ -285,7 +268,6 @@ export async function DELETE(
       );
     }
 
-    // Verify college match
     if (student.volunteerProfile?.college !== collegeUser.collegeProfile.collegeName) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -293,8 +275,6 @@ export async function DELETE(
       );
     }
 
-    // Instead of deleting, you might want to deactivate
-    // For now, we'll delete (use with caution)
     await db.user.delete({
       where: { id: studentId }
     });
@@ -315,7 +295,7 @@ export async function DELETE(
 // PATCH /api/college/students/[id]/verify - Verify student
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -326,10 +306,9 @@ export async function PATCH(
       );
     }
 
-    const studentId = params.id;
-    const { action } = await req.json(); // action = "verify" or "reject"
+    const { id: studentId } = await params;
+    const { action } = await req.json();
 
-    // Check college access
     const collegeUser = await db.user.findUnique({
       where: { email: session.user.email },
       include: { collegeProfile: true }
@@ -342,7 +321,6 @@ export async function PATCH(
       );
     }
 
-    // Find student
     const student = await db.user.findUnique({
       where: { id: studentId },
       include: { volunteerProfile: true }
@@ -355,7 +333,6 @@ export async function PATCH(
       );
     }
 
-    // Verify college match
     if (student.volunteerProfile?.college !== collegeUser.collegeProfile.collegeName) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -364,7 +341,6 @@ export async function PATCH(
     }
 
     if (action === "verify") {
-      // Verify student email
       await db.user.update({
         where: { id: studentId },
         data: {
@@ -377,7 +353,6 @@ export async function PATCH(
       });
     } 
     else if (action === "reject") {
-      // Reject verification
       return NextResponse.json({
         message: "Student verification rejected"
       });

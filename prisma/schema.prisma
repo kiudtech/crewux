@@ -102,7 +102,6 @@ model VolunteerProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ─── ORGANIZATION PROFILE ───────────────────────────────────
 model OrganizationProfile {
   id                 String  @id @default(cuid())
   userId             String  @unique
@@ -120,6 +119,13 @@ model OrganizationProfile {
   verificationDocs   String?
   verificationStatus String  @default("UNVERIFIED")
 
+  // ✅ ADD THESE FIELDS
+  verifiedAt         DateTime?
+  verifiedBy         String?
+  rejectedAt         DateTime?
+  rejectedBy         String?
+  rejectionNotes     String?
+
   organizationRating Float @default(0)
   reliabilityScore   Float @default(100)
   totalEventsHosted  Int   @default(0)
@@ -129,6 +135,7 @@ model OrganizationProfile {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 
 // ─── COLLEGE PROFILE ────────────────────────────────────────
 model CollegeProfile {

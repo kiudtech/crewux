@@ -5,27 +5,23 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
+import { Button } from "@/components/ui/Button";  
 import {
   Bell,
-  Mail,
   Send,
-  Users,
-  Building2,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   Eye,
   Trash2,
-  Filter,
-  Search,
-  RefreshCw
+  RefreshCw,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  XCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 // Card Components
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>
+  <div className={`bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-sm ${className}`}>{children}</div>
 );
 
 const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -33,37 +29,18 @@ const CardContent = ({ children, className = "" }: { children: React.ReactNode; 
 );
 
 const CardHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="p-4 border-b border-gray-200">{children}</div>
+  <div className="p-4 border-b border-white/10">{children}</div>
 );
 
-const Badge = ({ children, variant = "default" }: any) => {
+const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "success" | "warning" | "danger" | "info" | "default" }) => {
   const variants: Record<string, string> = {
-    success: "bg-green-100 text-green-700",
-    warning: "bg-yellow-100 text-yellow-700",
-    danger: "bg-red-100 text-red-700",
-    info: "bg-blue-100 text-blue-700",
-    default: "bg-gray-100 text-gray-700"
+    success: "bg-green-500/20 text-green-400",
+    warning: "bg-yellow-500/20 text-yellow-400",
+    danger: "bg-red-500/20 text-red-400",
+    info: "bg-blue-500/20 text-blue-400",
+    default: "bg-gray-500/20 text-gray-400"
   };
   return <span className={`px-2 py-1 text-xs rounded-full ${variants[variant]}`}>{children}</span>;
-};
-
-const Button = ({ children, onClick, variant = "default", size = "md", className = "", isLoading = false }: any) => {
-  const variants = {
-    default: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700",
-    ghost: "hover:bg-gray-100",
-    danger: "bg-red-600 text-white hover:bg-red-700"
-  };
-  const sizes = { sm: "px-2 py-1 text-xs", md: "px-3 py-1.5 text-sm", lg: "px-4 py-2 text-base" };
-  return (
-    <button
-      onClick={onClick}
-      disabled={isLoading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className} ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-    >
-      {children}
-    </button>
-  );
 };
 
 interface Notification {
@@ -124,7 +101,6 @@ export default function SuperAdminNotificationsPage() {
 
     setSending(true);
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const newNotif: Notification = {
@@ -135,7 +111,7 @@ export default function SuperAdminNotificationsPage() {
         targetType: newNotification.target,
         sentAt: new Date().toISOString(),
         status: "sent",
-        recipients: 0 // Will be calculated by backend
+        recipients: 0
       };
       
       setNotifications([newNotif, ...notifications]);
@@ -160,10 +136,10 @@ export default function SuperAdminNotificationsPage() {
 
   const getTypeIcon = (type: string) => {
     switch(type) {
-      case "success": return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case "warning": return <AlertCircle className="w-5 h-5 text-yellow-500" />;
-      case "error": return <XCircle className="w-5 h-5 text-red-500" />;
-      default: return <Bell className="w-5 h-5 text-blue-500" />;
+      case "success": return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case "warning": return <AlertCircle className="w-5 h-5 text-yellow-400" />;
+      case "error": return <XCircle className="w-5 h-5 text-red-400" />;
+      default: return <Bell className="w-5 h-5 text-blue-400" />;
     }
   };
 
@@ -178,14 +154,14 @@ export default function SuperAdminNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-purple-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950">
       <Navbar />
       <div className="flex">
         <AdminSidebar />
@@ -194,8 +170,8 @@ export default function SuperAdminNotificationsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-white">Notifications</h1>
+                <p className="text-sm text-gray-400 mt-1">
                   Send and manage platform notifications
                 </p>
               </div>
@@ -208,7 +184,7 @@ export default function SuperAdminNotificationsPage() {
             {/* Send Notification Card */}
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+                <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
                   <Send className="w-5 h-5" />
                   Send New Notification
                 </h2>
@@ -216,7 +192,7 @@ export default function SuperAdminNotificationsPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Notification Title *
                     </label>
                     <input
@@ -224,17 +200,17 @@ export default function SuperAdminNotificationsPage() {
                       value={newNotification.title}
                       onChange={(e) => setNewNotification({...newNotification, title: e.target.value})}
                       placeholder="Enter title"
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border rounded-lg bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Target Audience
                     </label>
                     <select
                       value={newNotification.target}
                       onChange={(e) => setNewNotification({...newNotification, target: e.target.value as any})}
-                      className="w-full px-3 py-2 border rounded-lg bg-white"
+                      className="w-full px-3 py-2 border rounded-lg bg-white/10 border-white/20 text-white"
                     >
                       <option value="all">All Users</option>
                       <option value="volunteers">Volunteers Only</option>
@@ -243,13 +219,13 @@ export default function SuperAdminNotificationsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Notification Type
                     </label>
                     <select
                       value={newNotification.type}
                       onChange={(e) => setNewNotification({...newNotification, type: e.target.value as any})}
-                      className="w-full px-3 py-2 border rounded-lg bg-white"
+                      className="w-full px-3 py-2 border rounded-lg bg-white/10 border-white/20 text-white"
                     >
                       <option value="info">Information</option>
                       <option value="success">Success</option>
@@ -258,7 +234,7 @@ export default function SuperAdminNotificationsPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Message *
                     </label>
                     <textarea
@@ -266,7 +242,7 @@ export default function SuperAdminNotificationsPage() {
                       onChange={(e) => setNewNotification({...newNotification, message: e.target.value})}
                       placeholder="Enter notification message"
                       rows={3}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border rounded-lg bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
@@ -283,7 +259,7 @@ export default function SuperAdminNotificationsPage() {
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
                     <Bell className="w-5 h-5" />
                     Notification History
                   </h2>
@@ -291,22 +267,22 @@ export default function SuperAdminNotificationsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-white/10">
                   {notifications.map((notif) => (
-                    <div key={notif.id} className="p-4 hover:bg-gray-50 transition">
+                    <div key={notif.id} className="p-4 hover:bg-white/5 transition">
                       <div className="flex items-start gap-3">
                         <div className="mt-1">
                           {getTypeIcon(notif.type)}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{notif.title}</h3>
+                            <h3 className="font-semibold text-white">{notif.title}</h3>
                             {getTypeBadge(notif.type)}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{notif.message}</p>
+                          <p className="text-sm text-gray-300 mb-2">{notif.message}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-400">
                             <span className="flex items-center gap-1">
-                              <Mail className="w-3 h-3" />
+                              <Send className="w-3 h-3" />
                               {notif.recipients} recipients
                             </span>
                             <span>
@@ -322,7 +298,7 @@ export default function SuperAdminNotificationsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => deleteNotification(notif.id)}
-                            className="p-1 text-red-500 hover:text-red-700"
+                            className="p-1 text-red-400 hover:text-red-300"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -334,9 +310,9 @@ export default function SuperAdminNotificationsPage() {
 
                 {notifications.length === 0 && (
                   <div className="text-center py-12">
-                    <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900">No notifications</h3>
-                    <p className="text-gray-500 mt-1">
+                    <Bell className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white">No notifications</h3>
+                    <p className="text-gray-400 mt-1">
                       Send your first notification to users
                     </p>
                   </div>

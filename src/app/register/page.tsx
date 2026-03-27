@@ -3,35 +3,55 @@
 import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Users, Building2, GraduationCap, ArrowRight, Eye, Shield, Star, Zap, TrendingUp, Award, Calendar, Heart, Sparkles, Clock, CheckCircle, Rocket } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import {
+  Users,
+  Building2,
+  GraduationCap,
+  ArrowRight,
+  Eye,
+  Shield,
+  Star,
+  Zap,
+  TrendingUp,
+  Award,
+  Calendar,
+  Heart,
+  Sparkles,
+  Clock,
+  CheckCircle,
+  Rocket
+} from "lucide-react";
 import { VolunteerRegisterForm } from "./VolunteerRegisterForm";
 import { OrganizationRegisterForm } from "./OrganizationRegisterForm";
 import { CollegeRegisterForm } from "./CollegeRegisterForm";
 
-// Animation Variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+// ✅ FIX: Properly typed animation variants
+const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.5, 
+      ease: [0.21, 0.45, 0.27, 0.9]  // ✅ Use array instead of string
+    } 
+  }
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-const scaleOnHover = {
-  scale: 1.05,
-  transition: { duration: 0.2 }
 };
 
 const roleOptions = [
   { 
     value: "volunteer", 
     label: "Volunteer", 
-    icon: <Users className="w-10 h-10" />, 
+    icon: <Users className="w-12 h-12" />, 
     desc: "Find events & build your reputation", 
     gradient: "from-amber-500 to-orange-500",
     bgGradient: "from-amber-500/20 to-orange-500/20",
@@ -42,7 +62,7 @@ const roleOptions = [
   { 
     value: "organization", 
     label: "Organization", 
-    icon: <Building2 className="w-10 h-10" />, 
+    icon: <Building2 className="w-12 h-12" />, 
     desc: "Post events & find volunteers", 
     gradient: "from-indigo-500 to-purple-500",
     bgGradient: "from-indigo-500/20 to-purple-500/20",
@@ -53,7 +73,7 @@ const roleOptions = [
   { 
     value: "college", 
     label: "College / School", 
-    icon: <GraduationCap className="w-10 h-10" />, 
+    icon: <GraduationCap className="w-12 h-12" />, 
     desc: "Track student volunteering", 
     gradient: "from-emerald-500 to-teal-500",
     bgGradient: "from-emerald-500/20 to-teal-500/20",

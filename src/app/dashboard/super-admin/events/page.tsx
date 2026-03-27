@@ -9,12 +9,14 @@ import {
   Search,
   Eye,
   MapPin,
-  Clock,
   Users,
-  MoreVertical
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+// Card Components
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>
 );
@@ -23,7 +25,7 @@ const CardContent = ({ children, className = "" }: { children: React.ReactNode; 
   <div className={`p-4 ${className}`}>{children}</div>
 );
 
-const Badge = ({ children, variant = "default" }: any) => {
+const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "success" | "warning" | "danger" | "info" | "default" }) => {
   const variants: Record<string, string> = {
     success: "bg-green-100 text-green-700",
     warning: "bg-yellow-100 text-yellow-700",
@@ -34,15 +36,39 @@ const Badge = ({ children, variant = "default" }: any) => {
   return <span className={`px-2 py-1 text-xs rounded-full ${variants[variant]}`}>{children}</span>;
 };
 
-const Button = ({ children, onClick, variant = "default", size = "md", className = "" }: any) => {
-  const variants = {
+// Button Component
+type ButtonVariant = "default" | "primary" | "ghost";
+
+const Button = ({ 
+  children, 
+  onClick, 
+  variant = "default" as ButtonVariant, 
+  size = "md", 
+  className = "", 
+  disabled = false,
+  isLoading = false 
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void; 
+  variant?: ButtonVariant; 
+  size?: "sm" | "md" | "lg"; 
+  className?: string; 
+  disabled?: boolean;
+  isLoading?: boolean;
+}) => {
+  const variants: Record<ButtonVariant, string> = {
     default: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
     primary: "bg-indigo-600 text-white hover:bg-indigo-700",
     ghost: "hover:bg-gray-100"
   };
-  const sizes = { sm: "px-2 py-1 text-xs", md: "px-3 py-1.5 text-sm" };
+  const sizes = { sm: "px-2 py-1 text-xs", md: "px-3 py-1.5 text-sm", lg: "px-4 py-2 text-base" };
   return (
-    <button onClick={onClick} className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`}>
+    <button
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className} ${disabled || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      {isLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
       {children}
     </button>
   );
@@ -71,6 +97,8 @@ export default function SuperAdminEventsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -79,17 +107,22 @@ export default function SuperAdminEventsPage() {
 
   useEffect(() => {
     fetchEvents();
-  }, [statusFilter]);
+  }, [statusFilter, page, search]);
 
   const fetchEvents = async () => {
+    setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        status: statusFilter !== "all" ? statusFilter : "",
+        search: search
+      });
       const res = await fetch(`/api/admin/events?${params}`);
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);
+        setTotalPages(data.pagination?.totalPages || 1);
       } else {
         toast.error("Failed to fetch events");
       }
@@ -100,11 +133,6 @@ export default function SuperAdminEventsPage() {
       setLoading(false);
     }
   };
-
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(search.toLowerCase()) ||
-    event.organizerName.toLowerCase().includes(search.toLowerCase())
-  );
 
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -118,163 +146,198 @@ export default function SuperAdminEventsPage() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    try {
+      return new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    } catch {
+      return date;
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-purple-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Events</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage all events on the platform</p>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-sm text-gray-500">Total Events</p>
-            <p className="text-xl font-bold">{events.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-sm text-gray-500">Active</p>
-            <p className="text-xl font-bold text-green-600">{events.filter(e => e.status === "ACTIVE").length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-sm text-gray-500">Completed</p>
-            <p className="text-xl font-bold text-blue-600">{events.filter(e => e.status === "COMPLETED").length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-sm text-gray-500">Total Applications</p>
-            <p className="text-xl font-bold">{events.reduce((sum, e) => sum + e.applicationsCount, 0)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search events..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border rounded-lg"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950">
+      <div className="flex">
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="space-y-6">
+            {/* Header */}
+            <div>
+              <h1 className="text-2xl font-bold text-white">Events</h1>
+              <p className="text-sm text-gray-400 mt-1">Manage all events on the platform</p>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border rounded-lg bg-white"
-            >
-              <option value="all">All Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Events Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Event</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Organizer</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date & Location</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Slots</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Applications</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredEvents.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-gray-900">{event.title}</p>
-                        <p className="text-xs text-gray-500">{event.category}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm">{event.organizerName}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-sm">
-                          <Calendar className="w-3 h-3 text-gray-400" />
-                          <span>{formatDate(event.startDate)}</span>
-                        </div>
-                        {(event.city || event.state) && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <MapPin className="w-3 h-3" />
-                            <span>{[event.city, event.state].filter(Boolean).join(", ")}</span>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3 text-gray-400" />
-                        <span className="text-sm">{event.filledSlots}/{event.totalSlots}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm font-medium">{event.applicationsCount}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {getStatusBadge(event.status)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/events/${event.id}`}>
-                        <Button variant="ghost" size="sm" className="p-1">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredEvents.length === 0 && (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No events found</h3>
-              <p className="text-gray-500 mt-1">
-                {search ? "Try different search terms" : "No events created yet"}
-              </p>
+            {/* Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-3">
+                  <p className="text-sm text-gray-500">Total Events</p>
+                  <p className="text-xl font-bold">{events.length}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <p className="text-sm text-gray-500">Active</p>
+                  <p className="text-xl font-bold text-green-600">{events.filter(e => e.status === "ACTIVE").length}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <p className="text-sm text-gray-500">Completed</p>
+                  <p className="text-xl font-bold text-blue-600">{events.filter(e => e.status === "COMPLETED").length}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <p className="text-sm text-gray-500">Total Applications</p>
+                  <p className="text-xl font-bold">{events.reduce((sum, e) => sum + e.applicationsCount, 0)}</p>
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Filters */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search events..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 border rounded-lg bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-3 py-2 border rounded-lg bg-white/10 border-white/20 text-white"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Events Table */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Event</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Organizer</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date & Location</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Slots</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Applications</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {events.map((event) => (
+                        <tr key={event.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{event.title}</p>
+                              <p className="text-xs text-gray-500">{event.category}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm">{event.organizerName}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1 text-sm">
+                                <Calendar className="w-3 h-3 text-gray-400" />
+                                <span>{formatDate(event.startDate)}</span>
+                              </div>
+                              {(event.city || event.state) && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <MapPin className="w-3 h-3" />
+                                  <span>{[event.city, event.state].filter(Boolean).join(", ")}</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              <Users className="w-3 h-3 text-gray-400" />
+                              <span className="text-sm">{event.filledSlots}/{event.totalSlots}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium">{event.applicationsCount}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {getStatusBadge(event.status)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Link href={`/events/${event.id}`}>
+                              <Button variant="ghost" size="sm" className="p-1">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {events.length === 0 && (
+                  <div className="text-center py-12">
+                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900">No events found</h3>
+                    <p className="text-gray-500 mt-1">
+                      {search ? "Try different search terms" : "No events created yet"}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ✅ Pagination - Fixed */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2">
+                <Button
+                  variant="ghost"
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="text-gray-400"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+                <span className="flex items-center px-4 text-sm text-gray-400">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="ghost"
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                  className="text-gray-400"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

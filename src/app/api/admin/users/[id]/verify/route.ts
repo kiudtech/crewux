@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+// ✅ FIX: Use NextRequest and params as Promise
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -19,7 +20,8 @@ export async function POST(
     }
 
     const { verified } = await req.json();
-    const userId = params.id;
+    // ✅ await params
+    const { id: userId } = await params;
 
     const updatedUser = await db.user.update({
       where: { id: userId },

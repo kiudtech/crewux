@@ -5,18 +5,16 @@ import { db } from "@/lib/db";
 export async function GET(req: Request) {
   try {
     const session = await auth();
-
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify admin role
     const user = await db.user.findUnique({ where: { id: session.user.id } });
     if (user?.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get query parameters
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const type = searchParams.get("type");
@@ -25,7 +23,6 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
-    // Build where clause
     let where: any = {};
 
     if (status && status !== "all") {
@@ -45,7 +42,6 @@ export async function GET(req: Request) {
       ];
     }
 
-    // Fetch organizations
     const [organizations, totalCount] = await Promise.all([
       db.organizationProfile.findMany({
         where,
@@ -55,6 +51,7 @@ export async function GET(req: Request) {
               id: true,
               email: true,
               emailVerified: true,
+              phone: true,
               createdAt: true,
               _count: {
                 select: {
@@ -73,21 +70,21 @@ export async function GET(req: Request) {
       db.organizationProfile.count({ where })
     ]);
 
-    // Format response
+    // ✅ FIX: org.user.phone use karo, org.phone nahi
     const formattedOrganizations = organizations.map(org => ({
       id: org.id,
       organizationName: org.organizationName,
       officialEmail: org.officialEmail,
       contactPerson: org.contactPerson,
-      phone: org.phone,
+      phone: org.user?.phone || null,
       type: org.type,
       city: org.city,
       state: org.state,
       verificationStatus: org.verificationStatus,
-      emailVerified: org.user.emailVerified,
+      emailVerified: org.user?.emailVerified || false,
       createdAt: org.createdAt.toISOString(),
-      totalEvents: org.user._count.organizedEvents || 0,
-      totalVolunteers: 0, // Can be calculated from applications
+      totalEvents: org.user?._count?.organizedEvents || 0,
+      totalVolunteers: 0,
       logo: org.logoUrl
     }));
 
