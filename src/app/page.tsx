@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import {
   ArrowRight,
   Users,
@@ -17,20 +20,24 @@ import {
   TrendingUp,
   Award,
   Globe,
-  Heart,
   Sparkles,
   ChevronRight,
   Rocket,
-  Menu,
-  X,
-  LogIn,
-  UserPlus
+  CheckCircle,
+  Target,
+  Play,
+  Quote,
+  Crown
 } from "lucide-react";
 
-// ========== ANIMATION VARIANTS ==========
+// Animation Variants
 const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.6, ease: [0.21, 0.45, 0.27, 0.9] }
+  }
 };
 
 const staggerContainer: Variants = {
@@ -38,122 +45,47 @@ const staggerContainer: Variants = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
-const scaleOnHover = {
-  scale: 1.05,
-  transition: { duration: 0.2 }
-};
-
-// ========== NAVBAR COMPONENT ==========
-const Navbar = () => {
-  const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Crewux
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/events" className="text-gray-600 hover:text-indigo-600 transition">Events</Link>
-            <Link href="/about" className="text-gray-600 hover:text-indigo-600 transition">About</Link>
-            <Link href="/impact" className="text-gray-600 hover:text-indigo-600 transition">Impact</Link>
-            {session ? (
-              <Link href="/dashboard">
-                <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-700">
-                  Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                    <LogIn className="w-4 h-4" /> Sign In
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-                    <UserPlus className="w-4 h-4 mr-1" /> Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2">
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden py-4 border-t border-gray-100"
-          >
-            <div className="flex flex-col gap-3">
-              <Link href="/events" className="px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">Events</Link>
-              <Link href="/about" className="px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">About</Link>
-              <Link href="/impact" className="px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">Impact</Link>
-              {session ? (
-                <Link href="/dashboard" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-center">Dashboard</Link>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Link href="/login" className="px-3 py-2 border border-gray-200 rounded-lg text-center">Sign In</Link>
-                  <Link href="/register" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-center">Get Started</Link>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </motion.nav>
-  );
-};
-
-// ========== FEATURES DATA ==========
-const features = [
-  { icon: <Shield className="w-6 h-6" />, title: "Verified Profiles", desc: "100% verified organizations and volunteers", color: "from-blue-500 to-cyan-500" },
-  { icon: <Star className="w-6 h-6" />, title: "Reputation System", desc: "Build trust with ratings & reviews", color: "from-amber-500 to-orange-500" },
-  { icon: <Zap className="w-6 h-6" />, title: "Instant Matching", desc: "AI-powered opportunity matching", color: "from-yellow-500 to-amber-500" },
-  { icon: <TrendingUp className="w-6 h-6" />, title: "Analytics Dashboard", desc: "Track your impact in real-time", color: "from-emerald-500 to-teal-500" },
-  { icon: <Award className="w-6 h-6" />, title: "Certificates", desc: "Earn verified credentials", color: "from-purple-500 to-pink-500" },
-  { icon: <Globe className="w-6 h-6" />, title: "Pan India", desc: "Opportunities across 28 states", color: "from-indigo-500 to-purple-500" }
+// Stats Data
+const statsData = [
+  { value: 5240, label: "Active Volunteers", icon: Users, suffix: "+", color: "from-blue-500 to-indigo-500", description: "Making impact daily" },
+  { value: 568, label: "Organizations", icon: Building2, suffix: "+", color: "from-purple-500 to-pink-500", description: "Trusted partners" },
+  { value: 1320, label: "Events Hosted", icon: Calendar, suffix: "+", color: "from-emerald-500 to-teal-500", description: "And counting" },
+  { value: 18750, label: "Hours Contributed", icon: Clock, suffix: "+", color: "from-amber-500 to-orange-500", description: "Community impact" }
 ];
 
-// ========== MAIN COMPONENT ==========
+// Features Data
+const features = [
+  { icon: <Shield className="w-6 h-6" />, title: "Verified Profiles", desc: "100% verified organizations and volunteers", gradient: "from-blue-500 to-indigo-500", benefit: "Trust & Safety" },
+  { icon: <Star className="w-6 h-6" />, title: "Reputation System", desc: "Build trust with ratings & reviews", gradient: "from-amber-500 to-orange-500", benefit: "Credibility" },
+  { icon: <Zap className="w-6 h-6" />, title: "Instant Matching", desc: "AI-powered opportunity matching", gradient: "from-yellow-500 to-amber-500", benefit: "Efficiency" },
+  { icon: <TrendingUp className="w-6 h-6" />, title: "Analytics Dashboard", desc: "Track your impact in real-time", gradient: "from-emerald-500 to-teal-500", benefit: "Insights" },
+  { icon: <Award className="w-6 h-6" />, title: "Certificates", desc: "Earn verified credentials", gradient: "from-purple-500 to-pink-500", benefit: "Recognition" },
+  { icon: <Globe className="w-6 h-6" />, title: "Pan India Reach", desc: "Opportunities across 28 states", gradient: "from-cyan-500 to-blue-500", benefit: "Nationwide" }
+];
+
+// Journey Steps
+const journeySteps = [
+  { step: "01", title: "Create Account", desc: "Sign up in 2 minutes", icon: Users, color: "from-blue-500 to-indigo-500", details: "Free forever" },
+  { step: "02", title: "Get Verified", desc: "Complete verification", icon: CheckCircle, color: "from-emerald-500 to-teal-500", details: "Quick process" },
+  { step: "03", title: "Find Opportunities", desc: "Browse & apply", icon: Target, color: "from-amber-500 to-orange-500", details: "AI matched" },
+  { step: "04", title: "Make Impact", desc: "Start volunteering", icon: Award, color: "from-purple-500 to-pink-500", details: "Earn rewards" }
+];
+
+// Testimonials
+const testimonials = [
+  { name: "Priya Sharma", role: "Volunteer", content: "Crewux helped me find amazing opportunities to give back to the community. The platform is so easy to use!", avatar: "P", rating: 5, company: "Active Volunteer" },
+  { name: "Amit Singh", role: "Organization Head", content: "Finding reliable volunteers has never been easier. Crewux is a game-changer for event organizers.", avatar: "A", rating: 5, company: "Tech Events India" },
+  { name: "Dr. Meera Reddy", role: "College Dean", content: "Our students have benefited immensely from the volunteering opportunities on Crewux.", avatar: "M", rating: 5, company: "Delhi University" }
+];
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState({ organizations: 0, volunteers: 0, events: 0, hours: 0 });
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [particles, setParticles] = useState<Array<{ x: number; y: number; scale: number }>>([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const { scrollYProgress } = useScroll();
 
-  // Stats counter effect
   useEffect(() => {
-    const target = { organizations: 150, volunteers: 5240, events: 320, hours: 18750 };
-    const duration = 2000;
+    const target = { organizations: 568, volunteers: 5240, events: 1320, hours: 18750 };
+    const duration = 2500;
     const stepTime = 20;
     const steps = duration / stepTime;
     let currentStep = 0;
@@ -170,93 +102,26 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Mouse move effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  // Generate particles only on client side to avoid hydration mismatch
-  useEffect(() => {
-    setIsMounted(true);
-    const particlesArray = [];
-    for (let i = 0; i < 50; i++) {
-      particlesArray.push({
-        x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1200),
-        y: Math.random() * (typeof window !== "undefined" ? window.innerHeight : 800),
-        scale: Math.random() * 0.5 + 0.3
-      });
-    }
-    setParticles(particlesArray);
-  }, []);
-
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 overflow-x-hidden relative">
-      {/* Animated Particle Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((particle, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-            initial={{
-              x: particle.x,
-              y: particle.y,
-              scale: particle.scale
-            }}
-            animate={{
-              y: [particle.y, particle.y - 100, particle.y - 200],
-              x: [particle.x, particle.x + (Math.random() * 100 - 50), particle.x + (Math.random() * 200 - 100)],
-              opacity: [0.5, 0.3, 0]
-            }}
-            transition={{
-              duration: 8 + Math.random() * 7,
-              repeat: Infinity,
-              delay: Math.random() * 5
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Gradient Orbs */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, 30, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-indigo-500/30 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.3, 1], x: [0, -70, 0], y: [0, -40, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-purple-500/30 rounded-full blur-3xl"
-      />
-
-      {/* Mouse Follow Glow */}
-      <motion.div
-        className="fixed inset-0 pointer-events-none z-0"
-        animate={{
-          background: `radial-gradient(800px at ${mousePosition.x}px ${mousePosition.y}px, rgba(99, 102, 241, 0.15), transparent 70%)`
-        }}
-        transition={{ type: "tween", ease: "backOut", duration: 0.3 }}
-      />
-
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:64px_64px]" />
-
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30" />
+        
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, 30, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], x: [0, -70, 0], y: [0, -40, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-indigo-200/30 rounded-full blur-3xl"
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -267,48 +132,34 @@ export default function HomePage() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 backdrop-blur-sm rounded-full text-indigo-300 text-sm font-medium mb-6 border border-indigo-500/30"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full text-blue-600 text-sm font-medium mb-6 shadow-sm"
             >
               <Sparkles className="w-4 h-4" />
               <span>✨ India's Largest Event & Volunteer Network ✨</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-5xl md:text-7xl font-bold text-white mb-6"
-            >
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-6 leading-[1.1] tracking-tight">
               Connecting{" "}
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Talent
               </span>
               <br />
               with{" "}
-              <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Opportunity
               </span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed"
-            >
+            <p className="text-xl text-gray-500 max-w-3xl mx-auto mb-10 leading-relaxed">
               A structured, verified, reputation-based platform connecting organizations with volunteers, 
               students, and teams for events, summits, hackathons, and CSR drives across India.
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center mb-20"
-            >
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
               <Link href={session ? "/dashboard" : "/register"}>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                  <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 group">
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all group">
+                    <Rocket className="w-5 h-5 mr-2 group-hover:animate-pulse" />
                     Get Started Free
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -316,75 +167,197 @@ export default function HomePage() {
               </Link>
               <Link href="/events">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                  <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-white/10 px-8 py-6 text-lg">
+                  <Button variant="outline" size="lg" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-6 text-lg">
+                    <Play className="w-5 h-5 mr-2" />
                     Browse Events
                     <ChevronRight className="ml-2 w-5 h-5" />
                   </Button>
                 </motion.div>
               </Link>
-            </motion.div>
+            </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {[
-                { value: stats.organizations, label: "Organizations", icon: Building2, gradient: "from-blue-500 to-cyan-500" },
-                { value: stats.volunteers, label: "Volunteers", icon: Users, gradient: "from-purple-500 to-pink-500" },
-                { value: stats.events, label: "Events Hosted", icon: Calendar, gradient: "from-emerald-500 to-teal-500" },
-                { value: stats.hours, label: "Hours Contributed", icon: Clock, gradient: "from-amber-500 to-orange-500" }
-              ].map((stat, idx) => (
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {statsData.map((stat, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl"
+                  transition={{ delay: 0.5 + idx * 0.1 }}
                 >
-                  <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md`}>
-                    <stat.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-3xl font-bold text-white">{stat.value.toLocaleString()}+</p>
-                  <p className="text-sm text-gray-300">{stat.label}</p>
+                  <Card hover className="p-6 text-center border-0 shadow-xl hover:shadow-2xl bg-white/80 backdrop-blur-sm">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                      <stat.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <p className="text-3xl md:text-4xl font-bold text-gray-900">
+                      {idx === 0 ? stats.organizations : idx === 1 ? stats.volunteers : idx === 2 ? stats.events : stats.hours}
+                      {stat.suffix}
+                    </p>
+                    <p className="text-sm font-medium text-gray-600 mt-1">{stat.label}</p>
+                    <p className="text-xs text-gray-400 mt-1">{stat.description}</p>
+                  </Card>
                 </motion.div>
               ))}
             </div>
+
+            {/* Scroll Indicator */}
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+            >
+              <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
+                <div className="w-1 h-2 bg-gray-400 rounded-full mt-2 animate-pulse" />
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Why Choose <span className="text-indigo-400">Crewux</span>?
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full text-blue-600 text-sm font-medium mb-4">
+              <Crown className="w-4 h-4" />
+              <span>Why Choose Us</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Built for <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Trust & Impact</span>
             </h2>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              A platform built for trust, transparency, and meaningful connections
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              A platform designed to create meaningful connections and lasting impact
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-300 group"
               >
-                <div className={`w-12 h-12 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-4 text-white shadow-md group-hover:scale-110 transition-transform`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-300">{feature.desc}</p>
+                <Card hover className="p-8 h-full border-0 shadow-lg hover:shadow-2xl group bg-white">
+                  <div className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-6 text-white shadow-md group-hover:scale-110 transition-transform`}>
+                    {feature.icon}
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-xl font-semibold text-gray-900">{feature.title}</h3>
+                    <span className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-full">{feature.benefit}</span>
+                  </div>
+                  <p className="text-gray-500">{feature.desc}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Journey Section */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full text-blue-600 text-sm font-medium mb-4">
+              <Target className="w-4 h-4" />
+              <span>Simple Process</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Your Journey to <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Impact</span>
+            </h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              Start making a difference in just 4 simple steps
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {journeySteps.map((step, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="relative"
+              >
+                {idx < journeySteps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/3 left-full w-full h-0.5 bg-gradient-to-r from-blue-200 to-indigo-200" />
+                )}
+                <Card className="p-6 text-center border-0 shadow-lg hover:shadow-xl bg-white">
+                  <div className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                    <step.icon className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="text-4xl font-bold text-blue-600 mb-2">{step.step}</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{step.desc}</p>
+                  <p className="text-xs text-gray-400">{step.details}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full text-blue-600 text-sm font-medium mb-4">
+              <Quote className="w-4 h-4" />
+              <span>Testimonials</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              What Our <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Community</span> Says
+            </h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              Trusted by thousands of volunteers and organizations across India
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card hover className="p-8 h-full border-0 shadow-lg hover:shadow-2xl bg-white">
+                  <Quote className="w-10 h-10 text-blue-200 mb-4" />
+                  <p className="text-gray-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                      <p className="text-sm text-gray-500">{testimonial.role}</p>
+                      <p className="text-xs text-blue-600">{testimonial.company}</p>
+                    </div>
+                  </div>
+                  <div className="flex mt-3">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -392,41 +365,42 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
         <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-white mb-4"
-          >
-            Ready to Make an Impact?
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-indigo-100 mb-8"
-          >
-            Join thousands of volunteers and organizations already using Crewux
-          </motion.p>
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
           >
-            <Link href={session ? "/dashboard" : "/register"}>
-              <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all group">
-                Get Started Today
-                <Rocket className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Ready to Make an Impact?
+            </h2>
+            <p className="text-xl text-blue-100 mb-8">
+              Join 5000+ volunteers and organizations already making a difference
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href={session ? "/dashboard" : "/register"}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all group">
+                    Get Started Today
+                    <Rocket className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </motion.div>
+              </Link>
+              <Link href="/events">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10 px-8 py-6 text-lg">
+                    Browse Events
+                    <ChevronRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </motion.div>
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }
